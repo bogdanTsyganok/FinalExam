@@ -87,7 +87,7 @@ int main(void)
         return -1;
         //exit(EXIT_FAILURE);
     }
-
+    srand(time(NULL));
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
@@ -208,18 +208,6 @@ int main(void)
     GLint matModelInverseTranspose_Location = glGetUniformLocation(program, "matModelInverseTranspose");
     ::g_inverseMatModel_location = matModelInverseTranspose_Location;
 
-    //AnimationSystem* animationController = new AnimationSystem();
-
-//    ::g_pTheLights->theLights[0].diffuse = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-//    //... and so on...
-////    	vec4 param1;	// x = lightType, y = inner angle, z = outer angle, w = TBD
-////	                // 0 = pointlight
-////					// 1 = spot light
-////					// 2 = directional light
-////    ::g_pTheLights->theLights[0].param1.x = 1.0f;    // Spot light
-//    ::g_pTheLights->theLights[0].param1.x = 0.0f;    // point light
-//    // Direction RELATIVE TO THE LIGHT
-//    // (-1 in y is straight down)
     ::g_pTheLights->theLights[0].position = glm::vec4(100.0f, 10000.0f, 0.0f, 1.0f);
     ::g_pTheLights->theLights[0].atten.y = 0.000001f;
     ::g_pTheLights->theLights[0].atten.z = 0.0000001f;
@@ -316,6 +304,7 @@ int main(void)
 
     ::physicsWorld->SetGravity(glm::vec3(0.f, 0.f, 0.f));
 
+    std::vector<sMeshRbConstruct*> spheres;
     for (int i = 0; i < 10; i++)
     {
         cMesh* pSphere = new cMesh();
@@ -329,7 +318,7 @@ int main(void)
         sphereRBDesc.mass = 1.f;
         sphereRBDesc.position = glm::vec3(5.f + 20.f * i, 8.f, 95.f);
         gdpPhysics::iRigidBody* sphereRB = ::physicsFactory->CreateRigidBody(sphereRBDesc, new gdpPhysics::SphereShape(5.f));
-        glm::vec3 randVec = glm::vec3(rand(), 0.f, rand());
+        glm::vec3 randVec = glm::vec3(rand() - rand() * 2, 0.f, rand() - rand() * 2);
         randVec = glm::normalize(randVec) * 500.f;
         sphereRB->ApplyImpulse(randVec);
         ::physicsWorld->AddBody(sphereRB);
@@ -338,7 +327,7 @@ int main(void)
         rbSphereConstruct->_mesh = pSphere;
         rbSphereConstruct->_rb = sphereRB;
         g_physicsManager.addConstruct(rbSphereConstruct);
-
+        spheres.push_back(rbSphereConstruct);
         
     }
 
@@ -369,24 +358,24 @@ int main(void)
         {
         case 0:
             positionX = 0.f;
-            positionZ = 900.f;
+            positionZ = 500.f;
             pWall->orientationXYZ.z = 0.f;
             pWall->orientationXYZ.x = glm::radians(-90.f);
             break;
         case 1:
-            positionX = 900.f;
+            positionX = 500.f;
             positionZ = 0.;
             pWall->orientationXYZ.z = glm::radians(90.f);
             pWall->orientationXYZ.x = 0.f;
             break;
         case 2:
             positionX = 0.f;
-            positionZ = -900.f;
+            positionZ = -500.f;
             pWall->orientationXYZ.z = 0.f;
             pWall->orientationXYZ.x = glm::radians(90.f);
             break;
         case 3:
-            positionX = -900.f;
+            positionX = -500.f;
             positionZ = 0.f;
             pWall->orientationXYZ.z = glm::radians(-90.f);
             pWall->orientationXYZ.x = 0.f;
@@ -429,60 +418,65 @@ int main(void)
 
     int maxHoles = 10;
     gunManager = new cGunManager(pGun, &instanceManager, maxHoles, &enemyManager);
-
-    asModel* Knight1 = new asModel("assets/models/Knight_Golden_Male.fbx", program);
-    Knight1->mPosition = glm::vec3(0.f, -30.f, 20.f);
-    Knight1->mScale = glm::vec3(.1f, .1f, .1f);
-    Knight1->mOrientation = glm::vec3(0.f, 3.2f, 0.f);
-    Knight1->bUseWholeObjectDebug = false;
-    Knight1->wholeObjectDebugColour = glm::vec4(0.7f, 0.2f, 0.f, 1.f);
-    
-    sAssimpRbConstruct* knightConstruct = new sAssimpRbConstruct();
-
+    std::vector<asModel*> knights;
+    for (int i = 0; i < 4; i++)
     {
+        asModel* Knight1 = new asModel("assets/models/Knight_Golden_Male.fbx", program);
+        Knight1->mPosition = glm::vec3(-30.f + 20.f * i, -30.f, 50.f );
+        Knight1->mScale = glm::vec3(.1f, .1f, .1f);
+        Knight1->mOrientation = glm::vec3(0.f, 3.2f, 0.f);
+        Knight1->bUseWholeObjectDebug = false;
+        Knight1->wholeObjectDebugColour = glm::vec4(0.7f, 0.2f, 0.f, 1.f);
 
-        gdpPhysics::cRigidBodyDesc knightRBDesc;
-        knightRBDesc.mass = 1.f;
-        knightRBDesc.position = glm::vec3(25.f, -27.f, 95.f + 40.f);//102.0f, 225.0f
-        knightRBDesc.rotation = glm::vec3(0.f, 0.f, 0.f);
-        gdpPhysics::iRigidBody* knightRB = ::physicsFactory->CreateRigidBody(knightRBDesc, new gdpPhysics::BoxShape(glm::vec3(5.f, 15.f, 5.f)));
-        ::physicsWorld->AddBody(knightRB);
-        knightConstruct->_rb = knightRB;
-        knightRB->SetUserPointer(Knight1);
+        sAssimpRbConstruct* knightConstruct = new sAssimpRbConstruct();
+
+        {
+
+            gdpPhysics::cRigidBodyDesc knightRBDesc;
+            knightRBDesc.mass = 1.f;
+            knightRBDesc.position = glm::vec3(-80.f + 40.f * i, -27.f, 235.f );//102.0f, 225.0f
+            knightRBDesc.rotation = glm::vec3(0.f, 0.f, 0.f);
+            gdpPhysics::iRigidBody* knightRB = ::physicsFactory->CreateRigidBody(knightRBDesc, new gdpPhysics::BoxShape(glm::vec3(5.f, 15.f, 5.f)));
+            ::physicsWorld->AddBody(knightRB);
+            knightConstruct->_rb = knightRB;
+            knightRB->SetUserPointer(Knight1);
+        }
+
+        knightConstruct->_model = Knight1;
+
+        ::g_physicsManager.addConstruct(knightConstruct);
+        sEnemy enemStruct;
+        enemStruct.construct = knightConstruct;
+        enemStruct.dieCmd = "die" + std::to_string(i);
+        enemStruct.attackCmd = "attack" + std::to_string(i);
+        enemStruct.state = "alive";
+        enemyManager.AddEnemy(enemStruct);
+
+        animationController.loadAnimation("assets/models/Knight_Golden_Male.fbx", "idle", Knight1, 8);
+        animationController.loadAnimation("assets/models/Knight_Golden_Male.fbx", "punch", Knight1, 5);
+        animationController.loadAnimation("assets/models/Knight_Golden_Male.fbx", "dying", Knight1, 0);
+
+        sAnimationControllerInfo knightAnimInfo;
+        knightAnimInfo.animationName = "idle";
+        knightAnimInfo.type = sAnimationControllerInfo::eStateType::command;
+        knightAnimInfo.stringArray.push_back(enemStruct.attackCmd);
+        knightAnimInfo.floatData[0] = 1.f;
+        AnimatedState* idleState = animationController.createState(knightAnimInfo);
+        knightAnimInfo.animationName = "punch";
+        knightAnimInfo.stringArray[0] = enemStruct.dieCmd;
+        knightAnimInfo.floatData[0] = 1.f;
+        AnimatedState* attackState = animationController.createState(knightAnimInfo);
+        knightAnimInfo.animationName = "dying";
+        knightAnimInfo.stringArray[0] = "wow";
+        knightAnimInfo.floatData[0] = 0.f;
+        AnimatedState* dyingState = animationController.createState(knightAnimInfo);
+
+        idleState->setNextState(attackState);
+        attackState->setNextState(dyingState);
+        //frazzledState->setNextState(idleState);
+        animationController.addState(Knight1->GetId(), idleState);
+        knights.push_back(Knight1);
     }
-
-    knightConstruct->_model = Knight1;
-
-    ::g_physicsManager.addConstruct(knightConstruct);
-    sEnemy enemStruct;
-    enemStruct.construct = knightConstruct;
-    enemStruct.dieCmd = "stopIdlying";
-    enemStruct.attackCmd = "punch";
-    enemStruct.state = "alive";
-    enemyManager.AddEnemy(enemStruct);
-
-    animationController.loadAnimation("assets/models/Knight_Golden_Male.fbx", "idle", Knight1, 8);
-    animationController.loadAnimation("assets/models/Knight_Golden_Male.fbx", "punch", Knight1, 5);
-    animationController.loadAnimation("assets/models/Knight_Golden_Male.fbx", "dying", Knight1, 0);
-
-    sAnimationControllerInfo knightAnimInfo;
-    knightAnimInfo.animationName = "idle";
-    knightAnimInfo.type = sAnimationControllerInfo::eStateType::command;
-    knightAnimInfo.stringArray.push_back("stopIdlying");
-    knightAnimInfo.floatData[0] = 1.f;
-    AnimatedState* idleState = animationController.createState(knightAnimInfo);
-    knightAnimInfo.animationName = "punch";
-    knightAnimInfo.stringArray.push_back("attack");
-    knightAnimInfo.floatData[0] = 1.f;
-    AnimatedState* attackState = animationController.createState(knightAnimInfo);
-    knightAnimInfo.animationName = "dying";
-    knightAnimInfo.stringArray[0] = "wow";
-    knightAnimInfo.floatData[0] = 0.f;
-    AnimatedState* dyingState = animationController.createState(knightAnimInfo);
-
-    idleState->setNextState(dyingState);
-    //frazzledState->setNextState(idleState);
-    animationController.addState(Knight1->GetId(), idleState);        
 
     cMesh* instancedHoles = new cMesh();
     instancedHoles->meshName = "quad2.ply";
@@ -557,39 +551,6 @@ int main(void)
     {
         std::cout << "\t" << *itTexName << std::endl;
     }
-
-
-    // Create a skybox object (a sphere with inverted normals that moves with the camera eye)
-    //cMesh* pSkyBox = new cMesh();
-    ////pSkyBox->meshName = "Isosphere_Smooth_Normals.ply";
-    ////
-    //// We are using a sphere with INWARD facing normals. 
-    //// This is so we see the "back" of the sphere.
-    //// 
-    //pSkyBox->meshName = "Isosphere_Smooth_Inverted_Normals_for_SkyBox.ply";
-    //
-    // 2 main ways we can do a skybox:
-    //
-    // - Make a sphere really big, so everything fits inside
-    //   (be careful of the far clipping plane)
-    // 
-    // - Typical way is:
-    //   - Turn off the depth test
-    //   - Turn off the depth function (i.e. writing to the depth buffer)
-    //   - Draw the skybox object (which can be really small, since it's not interacting with the depth buffer)
-    //   - Once drawn:
-    //      - turn on the depth function
-    //      - turn on the depth test
-    // 
-//    pSkyBox->scale = 5'000'000.0f;
-    //    
-    // We are now turning off the depth check, so this can be quite small, 
-    // just big enough to be beyond the near clipping plane.
-    // (here I'm making it 10x the size of the near plane)
-    //pSkyBox->scale = glm::vec3(::g_pFlyCamera->nearPlane * 1000.0f);
-    //// 
-    //pSkyBox->positionXYZ = ::g_pFlyCamera->getEye();
-
 
 //    ::g_vec_pMeshes.push_back(pDebugSphere);     // Debug sphere is #5
 
@@ -859,13 +820,27 @@ int main(void)
         }//for (unsigned int index
         // Scene is drawn
         // **********************************************************************
-        animationController.loadMatricies(Knight1->GetId(), program);
-        Knight1->Draw(glm::mat4(1.0f),
-            matModel_Location,
-            matModelInverseTranspose_Location,
-            program,
-            ::g_pVAOManager);
 
+        for (sMeshRbConstruct* pSphere : spheres)
+        {
+            glm::vec3 pos;
+            pSphere->_rb->GetPosition(pos);
+            if (pos.y > 100.f)
+            {
+                glm::vec3 force(rand() - rand() * 2, -2.f, rand() - rand() * 2);
+                pSphere->_rb->ApplyForce(glm::normalize(force) * 50.f);
+            }
+        }
+
+        for (asModel* knight : knights)
+        {
+            animationController.loadMatricies(knight->GetId(), program);
+            knight->Draw(glm::mat4(1.0f),
+                matModel_Location,
+                matModelInverseTranspose_Location,
+                program,
+                ::g_pVAOManager);
+        }
         DrawObject(instanceManager.GetMesh("bulletHoles"), matModel, matModel_Location, matModelInverseTranspose_Location, program, ::g_pVAOManager);
 
 
@@ -931,168 +906,6 @@ int main(void)
 
     glfwTerminate();
     exit(EXIT_SUCCESS);
-}
-
-
-
-
-
-void DrawDebugObjects(
-        GLint matModel_Location,
-        GLint matModelInverseTranspose_Location,
-        GLuint program,
-        cVAOManager* pVAOManager)
-{
-
-
-    {   // Draw a sphere where the camera is looking.
-        // Take the at - eye --> vector 
-        glm::vec3 eye = ::g_pFlyCamera->getEye();
-        glm::vec3 at = ::g_pFlyCamera->getAtInWorldSpace();
-
-        glm::vec3 deltaDirection = at - eye;
-        // Normalize to make this vector 1.0 units in length
-        deltaDirection = glm::normalize(deltaDirection);
-
-        float SphereDistanceFromCamera = 300.0f;
-        glm::vec3 sphereLocation =
-            eye + (deltaDirection * SphereDistanceFromCamera);
-
-        // Draw the sphere
-
-        ::g_pDebugSphere->positionXYZ = sphereLocation;
-        ::g_pDebugSphere->scale = glm::vec3(5.0f);
-        ::g_pDebugSphere->objectDebugColourRGBA = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f);
-
-        DrawObject(::g_pDebugSphere,
-            glm::mat4(1.0f),
-            matModel_Location,
-            matModelInverseTranspose_Location,
-            program,
-            ::g_pVAOManager);
-
-    }//Draw a sphere where the camera is looking.
-
-
-
-    if ( ::g_bShowDebugShere )
-    {
-        // Draw other things, like debug objects, UI, whatever
-        glm::mat4 matModelDS = glm::mat4(1.0f);  // "Identity" ("do nothing", like x1)
-
-        // Draw a small white shere at the location of the light
-        sLight& currentLight = ::g_pTheLights->theLights[::g_selectedLight];
-
-        ::g_pDebugSphere->positionXYZ = currentLight.position;
-        ::g_pDebugSphere->scale = glm::vec3(1.0f);
-        ::g_pDebugSphere->objectDebugColourRGBA = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-        DrawObject(::g_pDebugSphere,
-                   matModelDS,
-                   matModel_Location,
-                   matModelInverseTranspose_Location,
-                   program,
-                   ::g_pVAOManager);
-
-        // Save old debug sphere model name
-        std::string oldDebugSphereModel = ::g_pDebugSphere->meshName;
-
-        const float LOW_RES_SPHERE_DISTANCE = 50.0f;
-        const std::string LOW_RES_SPHERE_MODEL = "ISO_Shphere_flat_3div_xyz_n_rgba_uv.ply";
-        const std::string HIGH_RES_SPHERE_MODEL = "ISO_Shphere_flat_4div_xyz_n_rgba_uv.ply";
-
-        //float calcApproxDistFromAtten( 
-        //      float targetLightLevel, 
-        //      float accuracy, 
-        //      float infiniteDistance, 
-        //      float constAttenuation, 
-        //      float linearAttenuation,  
-        //      float quadraticAttenuation, 
-        //	    unsigned int maxIterations = DEFAULTMAXITERATIONS /*= 50*/ );
-
-                // How far away is 95% brightness?
-        float distTo95Percent = ::g_pTheLights->lightHelper.calcApproxDistFromAtten(0.95f,    /* the target light level I want*/
-                                                                          0.01f,    /*accuracy - how close to 0.25f*/
-                                                                          10000.0f, /*infinity away*/
-                                                                          currentLight.atten.x, /*const atten*/
-                                                                          currentLight.atten.y, /*linear atten*/
-                                                                          currentLight.atten.z, /*quadratic atten*/
-                                                                          cLightHelper::DEFAULTMAXITERATIONS);
-        // Draw a red sphere at 95%
-        ::g_pDebugSphere->scale = glm::vec3(distTo95Percent);
-        ::g_pDebugSphere->objectDebugColourRGBA = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
-
-        ::g_pDebugSphere->meshName = (::g_pDebugSphere->scale.length() < LOW_RES_SPHERE_DISTANCE ? LOW_RES_SPHERE_MODEL : HIGH_RES_SPHERE_MODEL);
-
-        DrawObject(::g_pDebugSphere,
-                   matModelDS,
-                   matModel_Location,
-                   matModelInverseTranspose_Location,
-                   program,
-                   ::g_pVAOManager);
-
-        // How far away is 50% brightness?
-        float distTo50Percent = ::g_pTheLights->lightHelper.calcApproxDistFromAtten(0.50f,    /* the target light level I want*/
-                                                                          0.01f,    /*accuracy - how close to 0.25f*/
-                                                                          10000.0f, /*infinity away*/
-                                                                          currentLight.atten.x, /*const atten*/
-                                                                          currentLight.atten.y, /*linear atten*/
-                                                                          currentLight.atten.z, /*quadratic atten*/
-                                                                          cLightHelper::DEFAULTMAXITERATIONS);
-        // Draw a red sphere at 50%
-        ::g_pDebugSphere->scale = glm::vec3(distTo50Percent);
-        ::g_pDebugSphere->objectDebugColourRGBA = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f);
-        ::g_pDebugSphere->meshName = (::g_pDebugSphere->scale.length() < LOW_RES_SPHERE_DISTANCE ? LOW_RES_SPHERE_MODEL : HIGH_RES_SPHERE_MODEL);
-        DrawObject(::g_pDebugSphere,
-                   matModelDS,
-                   matModel_Location,
-                   matModelInverseTranspose_Location,
-                   program,
-                   ::g_pVAOManager);
-
-        // How far away is 25% brightness?
-        float distTo25Percent = ::g_pTheLights->lightHelper.calcApproxDistFromAtten(0.25f,    /* the target light level I want*/
-                                                                          0.01f,    /*accuracy - how close to 0.25f*/
-                                                                          10000.0f, /*infinity away*/
-                                                                          currentLight.atten.x, /*const atten*/
-                                                                          currentLight.atten.y, /*linear atten*/
-                                                                          currentLight.atten.z, /*quadratic atten*/
-                                                                          cLightHelper::DEFAULTMAXITERATIONS);
-        // Draw a red sphere at 25%
-        ::g_pDebugSphere->scale = glm::vec3(distTo25Percent);
-        ::g_pDebugSphere->objectDebugColourRGBA = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
-        ::g_pDebugSphere->meshName = (::g_pDebugSphere->scale.length() < LOW_RES_SPHERE_DISTANCE ? LOW_RES_SPHERE_MODEL : HIGH_RES_SPHERE_MODEL);
-        DrawObject(::g_pDebugSphere,
-                   matModelDS,
-                   matModel_Location,
-                   matModelInverseTranspose_Location,
-                   program,
-                   ::g_pVAOManager);
-
-        // How far away is 5% brightness?
-        float distTo5Percent = ::g_pTheLights->lightHelper.calcApproxDistFromAtten(0.05f,    /* the target light level I want*/
-                                                                         0.01f,    /*accuracy - how close to 0.25f*/
-                                                                         10000.0f, /*infinity away*/
-                                                                         currentLight.atten.x, /*const atten*/
-                                                                         currentLight.atten.y, /*linear atten*/
-                                                                         currentLight.atten.z, /*quadratic atten*/
-                                                                         cLightHelper::DEFAULTMAXITERATIONS);
-        // Draw a red sphere at 5%
-        ::g_pDebugSphere->scale = glm::vec3(distTo5Percent);
-        ::g_pDebugSphere->objectDebugColourRGBA = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
-        ::g_pDebugSphere->meshName = (::g_pDebugSphere->scale.length() < LOW_RES_SPHERE_DISTANCE ? LOW_RES_SPHERE_MODEL : HIGH_RES_SPHERE_MODEL);
-        DrawObject(::g_pDebugSphere,
-                   matModelDS,
-                   matModel_Location,
-                   matModelInverseTranspose_Location,
-                   program,
-                   ::g_pVAOManager);
-
-
-        ::g_pDebugSphere->meshName = oldDebugSphereModel;
-
-    }//if ( ::g_bShowDebugShere )
-
-    return;
 }
 
 

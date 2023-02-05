@@ -1,14 +1,15 @@
+Bogdan Tsyganok
+https://youtu.be/rbeBQZVugRY
+
 Running:
-Open the .sln file, run in release/debug and x64 configuration
+Open the .sln file, run in release and x64 configuration
 
 Controls:
 
-   W
-A Q/E D - moves camera
-   S
+WASD movement
+Shift to sprint
+Left Click to shoot
 
-1 2 - switch animated object
-arrow keys to apply absolute direction impulse
-space to apply up impulse
-
+Objective:
+freeze all spheres
 

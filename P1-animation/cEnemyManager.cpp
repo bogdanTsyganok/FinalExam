@@ -28,7 +28,8 @@ void cEnemyManager::Update(float dt, glm::vec3 playerPos)
 			angle = -angle;
 		enemy.construct->_rb->SetOrientation(glm::quat(glm::vec3(0.f, angle, 0.f)));
 
-
+		if(glm::length(playerPos - curPos) < 35.f)
+			pAnimationController->acceptCommand(enemy.attackCmd);
 	}
 }
 
@@ -45,6 +46,7 @@ void cEnemyManager::AcceptCommand(sMessage cmd)
 		{
 			if (enemy.construct->_model == (asModel*)(cmd.pointerData))
 			{
+				pAnimationController->acceptCommand(enemy.attackCmd);
 				pAnimationController->acceptCommand(enemy.dieCmd);
 				enemy.state = "dead";
 			}

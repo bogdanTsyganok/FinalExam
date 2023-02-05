@@ -4,7 +4,7 @@ https://youtu.be/rbeBQZVugRY
 Running:
 Open the .sln file, run in release and x64 configuration
 OR
-Unzip the output zip and run .exe
+Unzip the Executable.zip and run .exe
 
 Controls:
 
